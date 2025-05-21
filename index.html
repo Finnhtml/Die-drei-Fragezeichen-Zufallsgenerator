@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Die drei ??? Zufallsgenerator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #1a1a1a; /* Sehr dunkles Grau / Fast Schwarz */
+            color: #f0f0f0; /* Helles Grau für den allgemeinen Text */
+            display: flex;
+            flex-direction: column; /* Damit der Footer am Ende platziert werden kann */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-x: hidden; /* Verhindert horizontales Scrollen auf kleinen Geräten */
+            position: relative; /* Für den Footer-Link */
+        }
+        .container {
+            flex-direction: column;
+            width: 100%;
+            max-width: 600px;
+            background-color: #2b2b2b; /* Dunkleres Grau für den Hauptcontainer */
+            border: 2px solid #ffaa00; /* Leuchtendes Orange als Akzentfarbe */
+            border-radius: 12px; /* Abgerundete Ecken */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6); /* Stärkerer, dunklerer Schatten */
+            margin-bottom: 80px; /* Platz für den Footer-Link */
+        }
+        h1 {
+            font-family: 'Creepster', cursive;
+            color: #ffaa00; /* Orange für den Titel */
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8);
+            font-size: 2.5rem; /* Etwas größerer Titel */
+            margin-bottom: 1.5rem; /* Mehr Abstand */
+        }
+        @media (max-width: 640px) { /* Responsive für kleinere Bildschirme */
+            h1 {
+                font-size: 2rem;
+            }
+        }
+        .bg-white { /* Anpassung für interne Boxen */
+            background-color: #3a3a3a; /* Etwas helleres Grau */
+            color: #f0f0f0;
+            border-radius: 8px; /* Abgerundete Ecken */
+            padding: 1.5rem; /* Mehr Padding */
+        }
+        .text-blue-800 { /* Anpassung von Textfarben, die vorher blau waren */
+            color: #ffaa00; /* Orange Akzent */
+        }
+        .text-gray-700 { /* Labels */
+            color: #e0e0e0;
+        }
+        .text-gray-600 { /* Ergebnisse */
+            color: #c0c0c0;
+        }
+        .bg-blue-600 { /* Haupt-Button */
+            background-color: #ffaa00; /* Orange */
+            color: #1a1a1a; /* Sehr dunkler Text */
+            font-weight: bold;
+            padding: 0.75rem 1.5rem; /* Größerer Button */
+            border-radius: 8px; /* Abgerundete Ecken */
+            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.1s ease; /* Übergänge für Klick-Effekt */
+        }
+        .bg-blue-600:hover { /* Haupt-Button Hover */
+            background-color: #e69500; /* Dunkleres Orange */
+            transform: translateY(-2px); /* Leichter Schwebe-Effekt */
+        }
+        .bg-blue-600:active { /* Haupt-Button Klick-Effekt */
+            transform: translateY(0);
+            box-shadow: none;
+            background-color: #cc8400; /* Noch dunkler beim Klicken */
+        }
+        .form-checkbox:checked {
+            background-color: #ffaa00; /* Orange für Checkbox-Haken */
+            border-color: #ffaa00;
+        }
+        .form-checkbox {
+            border-color: #ffaa00; /* Oranger Rand für Checkboxen */
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 170, 0, 0.4); /* Gedämpftes Orange für Spinner */
+            border-left-color: #ffaa00; /* Leuchtendes Orange für den beweglichen Teil */
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #shareButton, #markAsHeardButton, #clearHeardHistoryButton {
+            background-color: #ffaa00; /* Orange */
+            color: #1a1a1a; /* Dunkler Text */
+            font-weight: bold;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); /* Leichter Schatten */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px; /* Abstand zwischen Text und Icon */
+        }
+        #shareButton:hover, #markAsHeardButton:hover, #clearHeardHistoryButton:hover {
+            background-color: #e69500; /* Dunkleres Orange */
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+        #shareButton:active, #markAsHeardButton:active, #clearHeardHistoryButton:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            background-color: #cc8400;
+        }
+
+        input[type="number"] {
+            background-color: #2b2b2b; /* Dunkelgrauer Hintergrund für Input-Felder */
+            border: 1px solid #ffaa00; /* Oranger Rand */
+            color: #f0f0f0;
+            padding: 0.5rem 0.75rem; /* Etwas mehr Padding */
+            border-radius: 6px;
+        }
+        input[type="number"]:focus {
+            outline: none;
+            box-shadow: 0 0 8px rgba(255, 170, 0, 0.7); /* Hellerer Oranger Fokus-Glüheffekt */
+        }
+        .text-gray-800 {
+            color: #ffaa00; /* Orange für H2 Überschriften in den Boxen */
+        }
+
+        /* Fade-in Animation für Ergebnisse */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Tooltip für Ausrufezeichen */
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+            margin-left: 8px;
+        }
+        .tooltip-container .tooltip-text {
+            visibility: hidden;
+            width: 250px; /* Breite des Tooltips */
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px 10px;
+            position: absolute;
+            z-index: 10;
+            bottom: 125%; /* Über dem Icon */
+            left: 50%;
+            margin-left: -125px; /* Zentrierung */
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+        }
+        .tooltip-container .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #555 transparent transparent transparent;
+        }
+        .tooltip-container:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Footer Link */
+        .footer-link {
+            position: fixed; /* Fixiert am Bildschirmrand */
+            bottom: 20px; /* 20px vom unteren Rand */
+            right: 20px; /* 20px vom rechten Rand */
+            background-color: #ffaa00; /* Orange Hintergrund */
+            color: #1a1a1a; /* Dunkler Text */
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+            z-index: 20; /* Sicherstellen, dass es über anderen Elementen liegt */
+        }
+        .footer-link:hover {
+            background-color: #e69500;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+        }
+        .footer-link:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            background-color: #cc8400;
+        }
+        @media (max-width: 640px) {
+            .footer-link {
+                bottom: 15px;
+                right: 15px;
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container flex items-center p-6 rounded-lg shadow-lg mx-auto">
+        <h1 class="text-center w-full">Die drei ??? Zufallsgenerator</h1>
+
+        <div class="w-full bg-white p-6 rounded-lg shadow-md mb-6">
+            <div class="mb-4">
+                <label class="flex items-center cursor-pointer">
+                    <input
+                        type="checkbox"
+                        id="includeSpecialsCheckbox"
+                        class="form-checkbox h-5 w-5"
+                    />
+                    <span class="ml-2 text-gray-700">Spezialfolgen einbeziehen (z.B. Adventskalender, Live-Hörspiele)</span>
+                </label>
+            </div>
+
+            <div class="mb-4">
+                <label class="flex items-center cursor-pointer">
+                    <input
+                        type="checkbox"
+                        id="filterOldCheckbox"
+                        class="form-checkbox h-5 w-5"
+                    />
+                    <span class="ml-2 text-gray-700">Folgen unter Nummer 50 ausschließen</span>
+                </label>
+            </div>
+
+            <div class="mb-4">
+                <label class="flex items-center cursor-pointer">
+                    <input
+                        type="checkbox"
+                        id="filterRemakesCheckbox"
+                        class="form-checkbox h-5 w-5"
+                    />
+                    <span class="ml-2 text-gray-700">Remake-Folgen ausschließen (z.B. "...gefährliche Erbschaft (Remake)")</span>
+                </label>
+            </div>
+
+            <div class="mb-4">
+                <label class="flex items-center cursor-pointer">
+                    <input
+                        type="checkbox"
+                        id="filterNumberCheckbox"
+                        class="form-checkbox h-5 w-5"
+                    />
+                    <span class="ml-2 text-gray-700">Nach Folgennummer filtern</span>
+                </label>
+                <div id="numberFilterOptions" class="ml-6 mt-2 hidden">
+                    <label for="minNumber" class="block text-sm font-bold mb-2 text-gray-700">Min. Nummer:</label>
+                    <input
+                        type="number"
+                        id="minNumber"
+                        min="1"
+                        value="1"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline mb-2"
+                    />
+                    <label for="maxNumber" class="block text-sm font-bold mb-2 text-gray-700">Max. Nummer:</label>
+                    <input
+                        type="number"
+                        id="maxNumber"
+                        min="1"
+                        value="232" class="shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
+                    />
+                </div>
+            </div>
+
+            <button
+                id="generateButton"
+                class="bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full flex items-center justify-center"
+            >
+                <span id="buttonText">Zufällige Folge generieren</span>
+                <span id="loadingSpinner" class="loading-spinner hidden"></span>
+            </button>
+        </div>
+
+        <div id="resultContainer" class="w-full bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-800">Deine nächste Folge:</h2>
+            <div id="randomFolgeResult" class="flex flex-col items-center">
+                <p id="randomFolgeDisplay" class="text-xl text-gray-600 text-center">Klicke auf den Button, um eine Folge zu erhalten!</p>
+                <div class="flex flex-wrap justify-center gap-4 mt-4">
+                    <button id="shareButton" class="font-bold py-2 px-4 rounded hidden"><i class="fas fa-share-alt"></i> Teilen</button>
+                    <button id="markAsHeardButton" class="font-bold py-2 px-4 rounded hidden"><i class="fas fa-check-circle"></i> Als gehört markieren</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="historyContainer" class="w-full bg-white p-6 rounded-lg shadow-md hidden">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-800 flex items-center">
+                Zuletzt gehörte Folgen:
+                <div class="tooltip-container">
+                    <i class="fas fa-exclamation-circle text-sm cursor-help"></i>
+                    <span class="tooltip-text">Der Verlauf und die gehörten Folgen werden in deinem Browser gespeichert. Wenn du deinen Browser-Cache leerst, gehen diese Daten verloren.</span>
+                </div>
+            </h2>
+            <ul id="historyList" class="list-disc pl-5 text-gray-700 mb-4">
+                </ul>
+            <button id="clearHeardHistoryButton" class="font-bold py-2 px-4 rounded w-full hidden">
+                <i class="fas fa-trash-alt"></i> Alle gehörten Folgen löschen
+            </button>
+        </div>
+    </div>
+
+    <a href="https://finnhtml.github.io/Meine-Websites/" target="_blank" class="footer-link">
+        Meine anderen Websites
+    </a>
+
+    <script>
+        const dreiFragezeichenFolgen = [
+            { nummer: 1, titel: "und der Super-Papagei" },
+            { nummer: 2, titel: "und der Phantomsee" },
+            { nummer: 3, titel: "und der Karpatenhund" },
+            { nummer: 4, titel: "und die schwarze Katze" },
+            { nummer: 5, titel: "und der Fluch des Rubins" },
+            { nummer: 6, titel: "und der sprechende Totenkopf" },
+            { nummer: 7, titel: "und der unheimliche Drache" },
+            { nummer: 8, titel: "und der grüne Geist" },
+            { nummer: 9, titel: "und die rätselhaften Bilder" },
+            { nummer: 10, titel: "und die flüsternde Mumie" },
+            { nummer: 11, titel: "und das Gespensterschloss" },
+            { nummer: 12, titel: "und der seltsame Wecker" },
+            { nummer: 13, titel: "und der lachende Schatten" },
+            { nummer: 14, titel: "und das Bergmonster" },
+            { nummer: 15, titel: "und der rasende Löwe" },
+            { nummer: 16, titel: "und der Zauberspiegel" },
+            { nummer: 17, titel: "und die gefährliche Erbschaft" },
+            { nummer: 18, titel: "und die Geisterinsel" },
+            { nummer: 19, titel: "und der Teufelsberg" },
+            { nummer: 20, titel: "und die flammende Spur" },
+            { nummer: 21, titel: "und der tanzende Teufel" },
+            { nummer: 22, titel: "und der verschwundene Schatz" },
+            { nummer: 23, titel: "und das Aztekenschwert" },
+            { nummer: 24, titel: "und die silberne Spinne" },
+            { nummer: 25, titel: "und die singende Schlange" },
+            { nummer: 26, titel: "und die Silbermine" },
+            { nummer: 27, titel: "und der magische Kreis" },
+            { nummer: 28, titel: "und der Doppelgänger" },
+            { nummer: 29, titel: "Originalmusik" },
+            { nummer: 30, titel: "und das Riff der Haie" },
+            { nummer: 31, titel: "und das Narbengesicht" },
+            { nummer: 32, titel: "und der Ameisenmensch" },
+            { nummer: 33, titel: "und die bedrohte Ranch" },
+            { nummer: 34, titel: "und der rote Pirat" },
+            { nummer: 35, titel: "und der Höhlenmensch" },
+            { nummer: 36, titel: "und der Super-Wal" },
+            { nummer: 37, titel: "und der heimliche Hehler" },
+            { nummer: 38, titel: "und der unsichtbare Gegner" },
+            { nummer: 39, titel: "und die Perlenvögel" },
+            { nummer: 40, titel: "und der Automarder" },
+            { nummer: 41, titel: "und das Gespensterschiff" },
+            { nummer: 42, titel: "und der weinende Sarg" },
+            { nummer: 43, titel: "und der höllische Werwolf" },
+            { nummer: 44, titel: "und der gestohlene Preis" },
+            { nummer: 45, titel: "und das Gold der Wikinger" },
+            { nummer: 46, titel: "und der schrullige Millionär" },
+            { nummer: 47, titel: "und der giftige Gockel" },
+            { nummer: 48, titel: "und die gefährliche Erbschaft (Remake)" },
+            { nummer: 49, titel: "und die Comic-Diebe" },
+            { nummer: 50, titel: "und die Dopingfalle" },
+            { nummer: 51, titel: "und der riskante Ritt" },
+            { nummer: 52, titel: "und der verschwundene Filmstar" },
+            { nummer: 53, titel: "und die Automafia" },
+            { nummer: 54, titel: "und der Geisterzug" },
+            { nummer: 55, titel: "und der schwarze Skorpion" },
+            { nummer: 56, titel: "und die Videobotschaft" },
+            { nummer: 57, titel: "und der verrückte Maler" },
+            { nummer: 58, titel: "und der Schatz im Bergsee" },
+            { nummer: 59, titel: "und die Fußball-Gangster" },
+            { nummer: 60, titel: "und der doppelte Detektiv" },
+            { nummer: 61, titel: "und die Rache des Tigers" },
+            { nummer: 62, titel: "und die Karten des Bösen" },
+            { nummer: 63, titel: "und die Schattenmänner" },
+            { nummer: 64, titel: "Geisterstadt" },
+            { nummer: 65, titel: "Diamantenschmuggel" },
+            { nummer: 66, titel: "und die Schreckensinsel" },
+            { nummer: 67, titel: "und das Geheimnis der Särge" },
+            { nummer: 68, titel: "und der Schatz im Bergsee (Remake)" },
+            { nummer: 69, titel: "Späte Rache" },
+            { nummer: 70, titel: "Schüsse aus dem Dunkel" },
+            { nummer: 71, titel: "und die verschwundene Seglerin" },
+            { nummer: 72, titel: "Dreckiger Deal" },
+            { nummer: 73, titel: "Poltergeist" },
+            { nummer: 74, titel: "und das brennende Schwert" },
+            { nummer: 75, titel: "Die Spur des Raben" },
+            { nummer: 76, titel: "Stimmen aus dem Nichts" },
+            { nummer: 77, titel: "und der Schreiende Nebel" },
+            { nummer: 78, titel: "Das leere Grab" },
+            { nummer: 79, titel: "Im Bann des Voodoo" },
+            { nummer: 80, titel: "Geheimsache Ufo" },
+            { nummer: 81, titel: "Meuterei auf hoher See" },
+            { nummer: 82, titel: "Die Karten des Bösen (Remake)" },
+            { nummer: 83, titel: "Meuterei auf hoher See (Remake)" },
+            { nummer: 84, titel: "Musik des Teufels" },
+            { nummer: 85, titel: "Feuerturm" },
+            { nummer: 86, titel: "Nacht in Angst" },
+            { nummer: 87, titel: "Wolfsgesicht" },
+            { nummer: 88, titel: "Vampir im Internet" },
+            { nummer: 89, titel: "Tödliche Spur" },
+            { nummer: 90, titel: "Der Feuerteufel" },
+            { nummer: 91, titel: "Labyrinth der Götter" },
+            { nummer: 92, titel: "Todesflug" },
+            { nummer: 93, titel: "Das schwarze Monster" },
+            { nummer: 94, titel: "Das schwarze Monster (Remake)" },
+            { nummer: 95, titel: "Botschaft von Geisterhand" },
+            { nummer: 96, titel: "Rufmord" },
+            { nummer: 97, titel: "Insektenstachel" },
+            { nummer: 98, titel: "Doppelte Täuschung" },
+            { nummer: 99, titel: "Rufmord (Remake)" },
+            { nummer: 100, titel: "Toteninsel" },
+            { nummer: 101, titel: "Das Erbe des Meisterdiebs" },
+            { nummer: 102, titel: "Doppelte Täuschung (Remake)" },
+            { nummer: 103, titel: "Das Erbe des Meisterdiebs (Remake)" },
+            { nummer: 104, titel: "Gift per E-Mail" },
+            { nummer: 105, titel: "Der Nebelberg" },
+            { nummer: 106, titel: "Der Mann ohne Kopf" },
+            { nummer: 107, titel: "Gefährliches Quiz" },
+            { nummer: 108, titel: "Die sieben Tore" },
+            { nummer: 109, titel: "Gefährliches Quiz (Remake)" },
+            { nummer: 110, titel: "Panik im Park" },
+            { nummer: 111, titel: "Die sieben Tore (Remake)" },
+            { nummer: 112, titel: "Schlucht der Dämonen" },
+            { nummer: 113, titel: "Das Auge des Drachen" },
+            { nummer: 114, titel: "Die Villa der Toten" },
+            { nummer: 115, titel: "Codename: Cobra" },
+            { nummer: 116, titel: "Codename: Cobra (Remake)" },
+            { nummer: 117, titel: "Der schwarze Skorpion (Remake)" },
+            { nummer: 118, titel: "Das düstere Vermächtnis" },
+            { nummer: 119, titel: "Der geheime Schlüssel" },
+            { nummer: 120, titel: "Der schwarze Skorpion (Re-Remake)" },
+            { nummer: 121, titel: "Spur ins Nichts" },
+            { nummer: 122, titel: "Der Geisterzug (Remake)" },
+            { nummer: 123, titel: "Fußballfieber" },
+            { nummer: 124, titel: "Geister-Canyon" },
+            { nummer: 125, titel: "Feuermond" },
+            { nummer: 126, titel: "SMS aus dem Grab" },
+            { nummer: 127, titel: "Schwarze Madonna" },
+            { nummer: 128, titel: "Schatten über Hollywood" },
+            { nummer: 129, titel: "SMS aus dem Grab (Remake)" },
+            { nummer: 130, titel: "Der Fluch des Drachen" },
+            { nummer: 131, titel: "Haus des Schreckens" },
+            { nummer: 132, titel: "Spuk im Netz" },
+            { nummer: 133, titel: "Fels der Dämonen" },
+            { nummer: 134, titel: "Der tote Mönch" },
+            { nummer: 135, titel: "Fluch des Piraten" },
+            { nummer: 136, titel: "und das versunkene Dorf" },
+            { nummer: 137, titel: "Pfad der Angst" },
+            { nummer: 138, titel: "Die geheime Treppe" },
+            { nummer: 139, titel: "Das Geheimnis der Diva" },
+            { nummer: 140, titel: "Stadt der Vampire" },
+            { nummer: 141, titel: "Zwillinge der Finsternis" },
+            { nummer: 142, titel: "Tödliches Eis" },
+            { nummer: 143, titel: "Die Poker-Hölle" },
+            { nummer: 144, titel: "Zwillinge der Finsternis (Remake)" },
+            { nummer: 145, titel: "und die Rache der Samurai" },
+            { nummer: 146, titel: "Der Biss der Bestie" },
+            { nummer: 147, titel: "Die Poker-Hölle (Remake)" },
+            { nummer: 148, titel: "und die feurige Flut" },
+            { nummer: 149, titel: "Der namenlose Gegner" },
+            { nummer: 150, titel: "Geisterbucht" },
+            { nummer: 151, titel: "Schwarze Sonne" },
+            { nummer: 152, titel: "Skateboard-Fieber" },
+            { nummer: 153, titel: "Das Fußballphantom" },
+            { nummer: 154, titel: "Botschaft aus der Unterwelt" },
+            { nummer: 155, titel: "und der Meister des Todes" },
+            { nummer: 156, titel: "Im Netz des Drachen" },
+            { nummer: 157, titel: "Im Zeichen der Schlange" },
+            { nummer: 158, titel: "Der Feuergeist" },
+            { nummer: 159, titel: "Nacht der Tiger" },
+            { nummer: 160, titel: "Geheimnisvolle Botschaften" },
+            { nummer: 161, titel: "Die blutenden Bilder" },
+            { nummer: 162, titel: "und der schreiende Nebel" },
+            { nummer: 163, titel: "Der verschollene Pilot" },
+            { nummer: 164, titel: "Fußball-Teufel" },
+            { nummer: 165, titel: "Im Schatten des Giganten" },
+            { nummer: 166, titel: "und die brennende Stadt" },
+            { nummer: 167, titel: "Im Bann des Drachen" },
+            { nummer: 168, titel: "GPS-Gangster" },
+            { nummer: 169, titel: "Die Spur des Spielers" },
+            { nummer: 170, titel: "Straße des Grauens" },
+            { nummer: 171, titel: "Wüstenfieber" },
+            { nummer: 172, titel: "und das Blaue Biest" },
+            { nummer: 173, titel: "Dämon der Rache" },
+            { nummer: 174, titel: "und das Tuch der Toten" },
+            { nummer: 175, titel: "Schattenwelt" },
+            { nummer: 176, titel: "und der gestohlene Sieg" },
+            { nummer: 177, titel: "Der Geist des Goldgräbers" },
+            { nummer: 178, titel: "Der Gefiederte Schrecken" },
+            { nummer: 179, titel: "Die Rache des Untoten" },
+            { nummer: 180, titel: "und die flüsternden Puppen" },
+            { nummer: 181, titel: "Das Kabinett des Zauberers" },
+            { nummer: 182, titel: "Im Haus des Henkers" },
+            { nummer: 183, titel: "und der letzte Song" },
+            { nummer: 184, titel: "und der Hexengarten" },
+            { nummer: 185, titel: "und der Mann ohne Augen" },
+            { nummer: 186, titel: "Insel des Vergessens" },
+            { nummer: 187, titel: "Signale aus dem Jenseits" },
+            { nummer: 188, titel: "Geisterlampe" },
+            { nummer: 189, titel: "und der unsichtbare Passagier" },
+            { nummer: 190, titel: "und die Kammer der Rätsel" },
+            { nummer: 191, titel: "Verbrechen im Nichts" },
+            { nummer: 192, titel: "Im Bann des Voodoo (Remake)" },
+            { nummer: 193, titel: "Schrecken aus der Tiefe" },
+            { nummer: 194, titel: "und die Zeitreisende" },
+            { nummer: 195, titel: "Im Reich der Ungeheuer" },
+            { nummer: 196, titel: "Geheimnis des Bauchredners" },
+            { nummer: 197, titel: "Im Auge des Sturms" },
+            { nummer: 198, titel: "Die Legende der Gaukler" },
+            { nummer: 199, titel: "und der grüne Kobold" },
+            { nummer: 200, titel: "Feuriges Auge" },
+            { nummer: 201, titel: "Höhenangst" },
+            { nummer: 202, titel: "Das Buch der Toten" },
+            { nummer: 203, titel: "Tauchgang ins Ungewisse" },
+            { nummer: 204, titel: "Der dunkle Wächter" },
+            { nummer: 205, titel: "Der rote Rächer" },
+            { nummer: 206, titel: "Haus des Schreckens (Remake)" },
+            { nummer: 207, titel: "Die Lebenden Bilder" },
+            { nummer: 208, titel: "Kelch des Schicksals" },
+            { nummer: 209, titel: "Kreaturen der Nacht" },
+            { nummer: 210, titel: "und die schweigende Grotte" },
+            { nummer: 211, titel: "und der Jadekönig" },
+            { nummer: 212, titel: "und der weiße Leopard" },
+            { nummer: 213, titel: "Der Fluch der Medusa" },
+            { nummer: 214, titel: "und der Geisterbunker" },
+            { nummer: 215, titel: "und die verlorene Zeit" },
+            { nummer: 216, titel: "Die Schwingen des Unheils" },
+            { nummer: 217, titel: "und der Kristallschädel" },
+            { nummer: 218, titel: "Im Netz der Lügen" },
+            { nummer: 219, titel: "und die Teufelsklippe" },
+            { nummer: 220, titel: "Im Wald der Gefahren" },
+            { nummer: 221, titel: "Der Geisterforscher" },
+            { nummer: 222, titel: "Die Spielhölle" },
+            { nummer: 223, titel: "Das Grab der Maya" },
+            { nummer: 224, titel: "Der verrückte Maler (Remake)" },
+            { nummer: 225, titel: "Das Geheimnis der Särge (Remake)" },
+            { nummer: 226, titel: "Der graue Leopard" },
+            { nummer: 227, titel: "Der Zeitgeist" },
+            { nummer: 228, titel: "Der Machtspieler" },
+            { nummer: 229, titel: "Rauchzeichen" },
+            { nummer: 230, titel: "Späte Rache (Remake)" },
+            { nummer: 231, titel: "Tödliche Spuren" },
+            { nummer: 232, titel: "Die Stadt aus Gold" }
+        ];
+
+        const spezialFolgen = [
+            { name: "Master of Chess" },
+            { name: "Phonophobia – Sinfonie der Angst" },
+            { name: "High Strung – Unter Hochspannung" },
+            { name: "Der dunkle Taipan" },
+            { name: "Die Music Box" },
+            { name: "Die drei ??? und der DreiTag" },
+            { name: "Stille Nacht, düstere Nacht (Adventskalender)" },
+            { name: "O du Finstere (Adventskalender)" },
+            { name: "Eine schreckliche Bescherung (Adventskalender)" },
+            { name: "Böser die Glocken nie klingen (Adventskalender)" },
+            { name: "Das Rätsel der Sieben (Kurzgeschichten)" },
+            { name: "Erbe des Drachen (Hörspiel zum Film)" },
+            { name: "Das verfluchte Schloss (Hörspiel zum Film)" },
+            { name: "Das Geheimnis der Geisterinsel (Hörspiel zum Film)" },
+            { name: "Das Gold der Inkas (Planetarium)" },
+            { name: "Der Tornadojäger (Planetarium)" },
+            { name: "Das kalte Auge (Planetarium)" },
+            { name: "Das versunkene Schiff (Planetarium)" },
+            { name: "Der dreiäugige Totenkopf (Planetarium)" },
+            { name: "Die drei ??? Kids – Die Rätselfalle" }
+        ];
+
+        // Referenzen zu den HTML-Elementen
+        const generateButton = document.getElementById('generateButton');
+        const buttonText = document.getElementById('buttonText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const randomFolgeDisplay = document.getElementById('randomFolgeDisplay');
+        const shareButton = document.getElementById('shareButton');
+        const markAsHeardButton = document.getElementById('markAsHeardButton'); // Neuer Button
+        const includeSpecialsCheckbox = document.getElementById('includeSpecialsCheckbox');
+        const filterOldCheckbox = document.getElementById('filterOldCheckbox');
+        const filterRemakesCheckbox = document.getElementById('filterRemakesCheckbox');
+        const filterNumberCheckbox = document.getElementById('filterNumberCheckbox');
+        const numberFilterOptions = document.getElementById('numberFilterOptions');
+        const minNumberInput = document.getElementById('minNumber');
+        const maxNumberInput = document.getElementById('maxNumber');
+        const historyContainer = document.getElementById('historyContainer');
+        const historyList = document.getElementById('historyList');
+        const clearHeardHistoryButton = document.getElementById('clearHeardHistoryButton'); // Neuer Button
+
+        let lastGeneratedFolge = null;
+        let folgeHistory = [];
+        let heardFolgen = []; // Neue Liste für "gehörte" Folgen
+        const MAX_HISTORY_ITEMS = 3;
+        const LOCAL_STORAGE_HISTORY_KEY = 'dreiFragezeichenHistory';
+        const LOCAL_STORAGE_HEARD_KEY = 'dreiFragezeichenHeard'; // Neuer Schlüssel
+
+        // Funktionen zum Laden/Speichern von Historie und gehörten Folgen
+        const loadHistory = () => {
+            const storedHistory = localStorage.getItem(LOCAL_STORAGE_HISTORY_KEY);
+            if (storedHistory) {
+                try {
+                    folgeHistory = JSON.parse(storedHistory);
+                } catch (e) {
+                    console.error("Fehler beim Laden der Historie aus Local Storage:", e);
+                    folgeHistory = [];
+                }
+            }
+        };
+
+        const saveHistory = () => {
+            localStorage.setItem(LOCAL_STORAGE_HISTORY_KEY, JSON.stringify(folgeHistory));
+        };
+
+        const loadHeardFolgen = () => {
+            const storedHeard = localStorage.getItem(LOCAL_STORAGE_HEARD_KEY);
+            if (storedHeard) {
+                try {
+                    heardFolgen = JSON.parse(storedHeard);
+                } catch (e) {
+                    console.error("Fehler beim Laden der gehörten Folgen aus Local Storage:", e);
+                    heardFolgen = [];
+                }
+            }
+        };
+
+        const saveHeardFolgen = () => {
+            localStorage.setItem(LOCAL_STORAGE_HEARD_KEY, JSON.stringify(heardFolgen));
+        };
+
+        // Funktion zum Anzeigen des Verlaufs
+        const updateHistoryDisplay = () => {
+            historyList.innerHTML = '';
+            if (folgeHistory.length > 0) {
+                historyContainer.classList.remove('hidden');
+                clearHeardHistoryButton.classList.remove('hidden'); // Button anzeigen, wenn Historie da ist
+                folgeHistory.forEach(folge => {
+                    const listItem = document.createElement('li');
+                    // Einheitlichen "Key" für Vergleich von Nummern- und Spezialfolgen erstellen
+                    const folgeKey = folge.nummer !== null ? `nummer-${folge.nummer}` : `titel-${folge.titel}`;
+                    const isHeard = heardFolgen.some(h => {
+                        const heardKey = h.nummer !== null ? `nummer-${h.nummer}` : `titel-${h.titel}`;
+                        return heardKey === folgeKey;
+                    });
+
+                    listItem.innerHTML = `${folge.nummer !== null ? `Folge ${folge.nummer}: ` : ''}${folge.titel} ${isHeard ? '<i class="fas fa-check-circle text-green-500 ml-1"></i>' : ''}`;
+                    historyList.appendChild(listItem);
+                });
+            } else {
+                historyContainer.classList.add('hidden');
+                clearHeardHistoryButton.classList.add('hidden'); // Button ausblenden, wenn keine Historie
+            }
+        };
+
+        // Event Listener für die "Nach Folgennummer filtern"-Checkbox
+        filterNumberCheckbox.addEventListener('change', () => {
+            if (filterNumberCheckbox.checked) {
+                numberFilterOptions.classList.remove('hidden');
+            } else {
+                numberFilterOptions.classList.add('hidden');
+            }
+        });
+
+        // Event Listener für den Teilen-Button
+        shareButton.addEventListener('click', () => {
+            if (lastGeneratedFolge) {
+                const textToShare = lastGeneratedFolge.nummer !== null
+                    ? `Ich höre gerade: Die drei ??? Folge ${lastGeneratedFolge.nummer}: ${lastGeneratedFolge.titel} #diedreifufragezeichen`
+                    : `Ich höre gerade: Die drei ??? ${lastGeneratedFolge.titel} #diedreifufragezeichen`;
+
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Die drei ??? Zufallsfolge',
+                        text: textToShare,
+                    }).catch(error => console.error('Fehler beim Teilen:', error));
+                } else {
+                    const dummyElement = document.createElement('textarea');
+                    document.body.appendChild(dummyElement);
+                    dummyElement.value = textToShare;
+                    dummyElement.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(dummyElement);
+                    alert('Der Text wurde in die Zwischenablage kopiert: \n\n' + textToShare);
+                }
+            }
+        });
+
+        // Event Listener für "Als gehört markieren" Button
+        markAsHeardButton.addEventListener('click', () => {
+            if (lastGeneratedFolge) {
+                // Erstelle einen einheitlichen Schlüssel zum Vergleichen
+                const currentFolgeKey = lastGeneratedFolge.nummer !== null ? `nummer-${lastGeneratedFolge.nummer}` : `titel-${lastGeneratedFolge.titel}`;
+
+                const alreadyHeard = heardFolgen.some(f => {
+                    const heardKey = f.nummer !== null ? `nummer-${f.nummer}` : `titel-${f.titel}`;
+                    return heardKey === currentFolgeKey;
+                });
+
+                if (!alreadyHeard) {
+                    heardFolgen.push(lastGeneratedFolge);
+                    saveHeardFolgen();
+                    updateHistoryDisplay(); // Historie aktualisieren, um Häkchen anzuzeigen
+                    alert(`"${lastGeneratedFolge.titel}" als gehört markiert!`);
+                } else {
+                    alert(`"${lastGeneratedFolge.titel}" ist bereits als gehört markiert.`);
+                }
+            }
+        });
+
+        // Event Listener für "Alle gehörten Folgen löschen" Button
+        clearHeardHistoryButton.addEventListener('click', () => {
+            if (confirm("Möchtest du wirklich alle markierten Folgen aus deiner 'gehört'-Liste löschen? Diese können dann wieder generiert werden.")) {
+                heardFolgen = [];
+                saveHeardFolgen();
+                updateHistoryDisplay();
+                alert("Alle gehörten Folgen wurden gelöscht.");
+            }
+        });
+
+        // Funktion zum Generieren einer zufälligen Folge
+        const generateRandomFolge = () => {
+            // Ladeanimation starten
+            buttonText.textContent = 'Generiere...';
+            loadingSpinner.classList.remove('hidden');
+            generateButton.disabled = true; // Button deaktivieren
+            randomFolgeDisplay.classList.remove('fade-in'); // Animation zurücksetzen
+            shareButton.classList.add('hidden');
+            markAsHeardButton.classList.add('hidden');
+
+
+            setTimeout(() => { // Simulation einer kurzen Ladezeit
+                let filteredFolgen = [...dreiFragezeichenFolgen];
+
+                // Filter für Folgennummern anwenden
+                if (filterNumberCheckbox.checked) {
+                    const min = parseInt(minNumberInput.value, 10);
+                    const max = parseInt(maxNumberInput.value, 10);
+
+                    if (isNaN(min) || isNaN(max) || min > max || min < 1 || max > dreiFragezeichenFolgen[dreiFragezeichenFolgen.length - 1].nummer) {
+                        randomFolgeDisplay.textContent = "Ungültiger Nummern-Filter! Bitte korrigiere die Eingaben (z.B. Min: 1, Max: " + dreiFragezeichenFolgen[dreiFragezeichenFolgen.length - 1].nummer + ").";
+                        shareButton.classList.add('hidden');
+                        markAsHeardButton.classList.add('hidden');
+                        // Ladeanimation beenden
+                        buttonText.textContent = 'Zufällige Folge generieren';
+                        loadingSpinner.classList.add('hidden');
+                        generateButton.disabled = false;
+                        return;
+                    }
+
+                    filteredFolgen = filteredFolgen.filter(
+                        folge => folge.nummer >= min && folge.nummer <= max
+                    );
+                }
+
+                // Filter für ältere Folgen anwenden
+                if (filterOldCheckbox.checked) {
+                    filteredFolgen = filteredFolgen.filter(folge => folge.nummer >= 50);
+                }
+
+                // Filter für Remake-Folgen anwenden
+                if (filterRemakesCheckbox.checked) {
+                    filteredFolgen = filteredFolgen.filter(folge => !folge.titel.includes('(Remake)') && !folge.titel.includes('(Re-Remake)'));
+                }
+
+                // Spezialfolgen hinzufügen, wenn gewünscht
+                let allFolgen = [...filteredFolgen];
+                if (includeSpecialsCheckbox.checked) {
+                    allFolgen = [...filteredFolgen, ...spezialFolgen.map((special) => ({
+                        nummer: null,
+                        titel: special.name + " (Spezial)"
+                    }))];
+                }
+
+                // Gehörte Folgen ausschließen
+                let availableFolgen = allFolgen.filter(f => {
+                    const folgeKey = f.nummer !== null ? `nummer-${f.nummer}` : `titel-${f.titel}`;
+                    return !heardFolgen.some(h => {
+                        const heardKey = h.nummer !== null ? `nummer-${h.nummer}` : `titel-${h.titel}`;
+                        return heardKey === folgeKey;
+                    });
+                });
+
+                // Überprüfen, ob überhaupt noch Folgen übrig sind
+                if (availableFolgen.length === 0) {
+                    randomFolgeDisplay.textContent = "Alle verfügbaren Folgen sind als gehört markiert oder keine passen zu deinen Filterkriterien! Bitte ändere die Einstellungen oder lösche die 'gehörten' Folgen.";
+                    shareButton.classList.add('hidden');
+                    markAsHeardButton.classList.add('hidden');
+                } else {
+                    // Zufällige Folge auswählen
+                    const randomIndex = Math.floor(Math.random() * availableFolgen.length);
+                    const selectedFolge = availableFolgen[randomIndex];
+                    lastGeneratedFolge = selectedFolge;
+
+                    // Ergebnis anzeigen
+                    if (selectedFolge.nummer !== null) {
+                        randomFolgeDisplay.textContent = `Folge ${selectedFolge.nummer}: ${selectedFolge.titel}`;
+                    } else {
+                        randomFolgeDisplay.textContent = `${selectedFolge.titel}`;
+                    }
+                    randomFolgeDisplay.classList.add('fade-in'); // Animation anwenden
+                    shareButton.classList.remove('hidden');
+                    markAsHeardButton.classList.remove('hidden');
+
+
+                    // Verlauf aktualisieren
+                    // Füge nur zur Historie hinzu, wenn es keine Spezialfolge ist, die bereits in der Historie ist
+                    const currentFolgeKeyForHistory = selectedFolge.nummer !== null ? `nummer-${selectedFolge.nummer}` : `titel-${selectedFolge.titel}`;
+                    const isNewInHistory = !folgeHistory.some(f => {
+                        const historyKey = f.nummer !== null ? `nummer-${f.nummer}` : `titel-${f.titel}`;
+                        return historyKey === currentFolgeKeyForHistory;
+                    });
+
+                    if (isNewInHistory) {
+                        folgeHistory.unshift(selectedFolge);
+                        if (folgeHistory.length > MAX_HISTORY_ITEMS) {
+                            folgeHistory.pop();
+                        }
+                        saveHistory(); // Verlauf speichern
+                        updateHistoryDisplay();
+                    }
+                }
+
+                // Ladeanimation beenden
+                buttonText.textContent = 'Zufällige Folge generieren';
+                loadingSpinner.classList.add('hidden');
+                generateButton.disabled = false;
+            }, 700); // Etwas kürzere Verzögerung für flüssigere UX
+        };
+
+        // Event Listener für den Button
+        generateButton.addEventListener('click', generateRandomFolge);
+
+        // Initialisiere die Ansicht beim Laden der Seite
+        loadHistory(); // Verlauf aus Local Storage laden
+        loadHeardFolgen(); // Gehörte Folgen aus Local Storage laden
+        updateHistoryDisplay(); // Verlauf anzeigen (inkl. Häkchen für gehörte Folgen)
+
+        if (!filterNumberCheckbox.checked) {
+            numberFilterOptions.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
